@@ -1,0 +1,147 @@
+---
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(fdrtool)
+
+```
+
+
+
+
+
+
+
+## 1A
+
+Plots of density estimates of varying bandwidth. We will be analyzing the modes for these plots. 
+
+```{r}
+# Load stamp data
+stampdata <- scan("stamp.txt") 
+plot(density(stampdata), lwd=1.5, main = "Plots of density estimates for default bandwidth")
+points(stampdata, rep(0,486), pch="X")
+
+```
+
+Starting off with the default bandwidth we see that the default bandwidth value is 0.003904. This density plot has 2 modes. 
+
+```{r}
+
+plot(density(stampdata, bw=0.015), lwd=1.5, main = "Plots of density estimates for 0.015 bandwidth")
+points(stampdata, rep(0,486), pch="X")
+
+```
+
+If we set the bandwidth to 0.015 then we see that the density estimate plot has one mode. 
+
+```{r}
+plot(density(stampdata, bw=0.0025), lwd=1.5, main = "Plots of density estimates for 0.0025 bandwidth")
+points(stampdata, rep(0,486), pch="X")
+
+
+```
+
+If we set the bandwidth to 0.0025 then we see that the density estimate plot has five modes. 
+
+
+```{r}
+
+
+plot(density(stampdata, bw=0.0018), lwd=1.2, main = "Plots of density estimates for 0.0018 bandwidth")
+points(stampdata, rep(0,486), pch="X")
+
+```
+
+
+If we set the bandwidth to 0.0018 then we see that the density estimate plot has seven modes. 
+
+
+Analysis: 
+
+As we have seen from the density estimate graph with a bandwidth of about 0.0025 produced five modes and a density estimate graph with a bandwidth of about 0.0018 produced seven modes. From these trends we notice that as we decrease the bandwidth value that the local modes become more pronounced. The greater the bandwidth the less modes we will see on the graph. 
+
+\newpage
+
+## 1c
+
+```{r}
+kde.cv <- function(x,h) {
+             n <- length(x)
+             if (missing(h)) {
+                r <- density(x)
+                h <- r$bw/4 + 3.75*c(0:100)*r$bw/100
+                }
+             cv <- NULL
+             for (j in h) {
+                cvj <- 0
+                for (i in 1:n) {
+                   z <- dnorm(x[i]-x,0,sd=j)/(n-1)
+                   cvj <- cvj + log(sum(z[-i]))
+                   }
+                cv <- c(cv,cvj/n)
+                }
+               r <- list(bw=h,cv=cv)
+               r
+}
+
+r <- kde.cv(stampdata)
+k <- plot(r$bw,r$cv) # plot of bandwidth versus CV
+
+
+```
+
+From above we were able to first plot plot CV versus.
+
+
+```{r}
+optimal <- r$bw[r$cv==max(r$cv)] # bandwidth maximizing CV
+optimal
+```
+
+Using this function we were able to find the optimal bandwidth and using the bandwidth we are able to plot the estimate the density of the Hidalgo stamp data.
+
+```{r}
+finplot <- plot(density(stampdata, bw=optimal), lwd=1.5)
+
+```
+
+From this density estimate graph we are able to see that there are about 7 modes on this graph. 
+
+\newpage
+
+## 2c
+
+```{r}
+
+incomedata <- scan("incomes.txt") 
+
+pietra_fcn <- function(data){
+  return (mean(abs(data-mean(data)))/(2*mean(data)))
+
+}
+
+
+pietra_fcn(incomedata)
+
+
+theta_count <- NULL
+
+for(i in 1:200){
+  theta_count[i] <- pietra_fcn(incomedata[-i])
+}
+
+theta_dot <- mean(theta_count)
+
+jackknife <- (sqrt((length(incomedata) - 1)/length(incomedata) * sum((theta_count - theta_dot)^2)))
+jackknife
+```
+
+
+Using the code above we found that the pietra value is 0.1875046 and the jackknife value is 0.009046412

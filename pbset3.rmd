@@ -1,0 +1,144 @@
+---
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(fdrtool)
+
+```
+
+
+
+
+# question 2
+
+## 2a
+
+```{r}
+venter <- function(x, tau=1/2) { # venter function provided
+   x <- sort(x)
+   n <- length(x)
+   m <- ceiling(tau*n)
+   x1 <- x[1:(n-m+1)]
+   x2 <- x[m:n]
+   j <- c(1:(n-m+1))
+   len <- x2-x1
+   k <- min(j[len==min(len)])
+   (x[k]+x[k+m-1])/2
+}
+
+stampdata <- scan("stamp.txt") # loading in stamp data 
+plot(density(stampdata), lwd = 1.5,  main = "Stamp Data Density Plot")+
+abline(v = venter(stampdata, 0.625), lwd = 1.5, col= "blue") +
+abline(v = venter(stampdata, 0.675), lwd = 1.5, col= "green")+
+abline(v = venter(stampdata), lwd = 1.5, col= "orange") 
+
+```
+
+
+As we can see the density plot has one global maximum which reaches its peak around the blue verticle line.Thus we can say that when tau is around 0.625 the estimate makes sense. 
+
+
+## 2b
+
+```{r}
+
+
+calc_mse <- function(sample_size, tau, alpha){
+
+  simulation <- NULL
+  
+  for (index in 1:10000){ #10000 specified in question
+    
+    x <- rgamma(sample_size, alpha)
+    simulation[index] <- venter(x, tau)
+    
+  }
+  
+  mean_squre_error <- mean((simulation-(alpha-1))^2) 
+  return (mean_squre_error)
+  
+}
+
+```
+
+
+ simulations 
+ 
+ 
+```{r}
+
+# sample size: 100 tau:0.1 alpha:2
+calc_mse(100, 0.1, 2)
+
+# sample size: 1000 tau:0.1 alpha:2
+calc_mse(1000,0.1, 2)
+
+# sample size: 100 tau:0.5 alpha:2
+calc_mse(100,0.5, 2) 
+
+# sample size: 1000 tau:0.5 alpha:2
+calc_mse(1000,0.5, 2)
+
+# sample size: 100 tau:0.1 alpha:10
+calc_mse(100,0.1, 10)
+
+# sample size: 1000 tau:0.1 alpha:10
+calc_mse(1000,0.1, 10)
+
+# sample size: 100 tau:0.5 alpha:10
+calc_mse(100, 0.5, 10)
+
+# sample size: 1000 tau:0.5 alpha:10
+calc_mse(1000,0.5, 10) 
+
+```
+
+
+For both alpha values 2 and 8 we estimated the mse of the venter estimator for different tau values (.5 and .1) and different sample size values(1000 and 100). From these 8 simulation, we can see that for both alpha values 2 and 8 that the mse values were lowest when the sample size was 1000 and the value of tau is 0.5. So we can say that the venter estimator where tau is 0.5 and sample size is 1000 is best when comparing mse.
+
+
+## 2c
+
+Before continuing it is important to know that each part of of the summation is a Gamma density function which we can use the dgamma function for. This includes the shape parameter, scale parameter and rate parameter.
+
+```{r}
+fcn_fx <- function(alpha, tau, sample_size, x){
+  summ <- NULL
+
+  for (i in 1:10000){
+    
+    rgamma_val <- rgamma(sample_size, alpha)
+    mu_val <- venter(rgamma_val, tau)
+    T_val <- sum(rgamma_val)
+    summ <- c(summ, dgamma(x, sample_size*alpha,  T_val/mu_val))
+  }
+  return (mean(summ))
+  
+}
+
+
+
+
+x <- c(1:500)/100
+values <- NULL
+for (i in x){
+values <- c(values, fcn_fx(2,0.5,100,i)) 
+}
+plot(x, values, type = "h",
+main = "Density (estimated)", ylab = "hat_f(x)")
+
+```
+
+
+
+
+
+
+
+

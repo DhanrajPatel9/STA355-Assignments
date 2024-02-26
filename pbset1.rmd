@@ -1,0 +1,57 @@
+---
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(fdrtool)
+
+```
+
+
+
+
+
+
+
+## 1E
+```{r}
+
+# modified the function halfnormal
+halfnormal <- function(x,tau=0.5,ylim) {
+  sigma <- quantile(abs(x),probs=tau)/sqrt(qchisq(tau,1))
+  n <- length(x)
+  pp <- ppoints(n)
+  qq <- sqrt(qchisq(pp,df=1))
+  CountNonZero <- 0
+
+# upper envelope
+  upper <- sigma*(qq + 3*sqrt(pp*(1-pp))/(2*sqrt(n)*dnorm(qq)))
+# lower envelope
+  lower <- sigma*(qq - 3*sqrt(pp*(1-pp))/(2*sqrt(n)*dnorm(qq)))
+# add upper and lower envelopes to plot
+  if (missing(ylim)) ylim <- c(0,max(c(upper,abs(x))))
+  plot(qq,sort(abs(x)),
+    xlab="Half Normal quantiles",ylab="ordered data",pch=20,
+    ylim=ylim)
+  lines(qq,lower,lty=3,lwd=3,col="red")
+  lines(qq,upper,lty=3,lwd=3,col="red")
+  abline(a=0,b=sigma,lwd=3)
+  # add these code to estimate how many observations have non-zero mean.
+  for (i in 1:length(x)){
+    if (sort(abs(x))[i] > upper[i]){
+      CountNonZero <- CountNonZero + 1
+    }
+  }
+  CountNonZero
+  }
+
+data <- scan("data.txt")
+halfnormal(data, ylim = c(0, 5))
+
+
+```
